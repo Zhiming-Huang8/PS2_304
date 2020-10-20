@@ -1,0 +1,267 @@
+---
+title: 'A statistical suggestion on living happier for Canadians'
+author: "Zhiming Huang, Yidou Wang"
+date: '2020-10-19'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F)
+```
+
+## Abstract 
+
+This study mainly invesigated the factors affect living quality for Canadians based on a reliable national survey data using statistical methods including linear regression models. The finding shows that keep good body and mental health, be married or living common with loevers. have more total children and has grandchildren as well as work more than 50 hours weekly with high income could make people living much happier. Also, there are lots of other suggestions on living happier for Canadians could be made based on the findings of this study. The government could make better decisions to improve the quality of life for the citizens by making better conditions for the suggestions of the study.
+
+
+## Introduction 
+
+In recent years, life quality becomes a very important indicator for people. A high quality of life is now becoming a basic requirement for lots of people and countries. 
+However, there are many factors affect quality of life such as health, income, education levels and so on. This study is aimed to invesigate the issues of effects of different factors on the quality of life measured by people's feeling score of life. This study mainly used graphical and model summarises to investigate the topic. It was found that male, education level not below bachelor, poor body health, poor mental health, citizenship by naturalization not by birth, single martial status, rented house not owned all leading to show lower feeling score of life while not living alone, have more total children and has grandchildren make people living happier with higher feeling score of life. Also, average hours worked 50.1 hours and more as well as family income with 125,000 dollars and more make people living happier. These findings are important because it would help the government to understand the profiles of groups with high or low feeling score of life and to make better decisions in improving the quality of life for the citizens. At last, the study first give an overall introduction followed by data and model dicussions, then results and dicussions of findings are given. The link to the study is: https://github.com/Zhiming-Huang8/PS2_304/blob/main/PS2_304.pdf
+
+
+
+
+
+
+## Data
+
+The source of data is the 2017 Canadian General Social Survey Data and the source code to clean the data provided by Alexander and Sam Caetano (2020). A subset of the cleaned data is used in this study which includes about 12000 instances with over 10 attributes. The response variable is the feeling score of life scaled from 0 to 10, the factors are mianly including age, gender, education, martial status, family income, weekly working hours, number of children, number of grandchildren, body and mental health. Some of the categorical factors are recoded in this study to simplify the original variables. For example, education level is only recoded into not below bachelor and below bachelor, more details of data cleaning procedure could check the source files of the study which is hold in the Github repo link https://github.com/Zhiming-Huang8/PS2_304.  . 
+
+The questionnaire of the survey has both good and bad aspects, the good ones including that it is a well-designed, well-tested survey which has a very high quality. The bad one is that there are lots of questions in the survey which is easily leading non-responses. 
+
+The target population of the survey is all of the non-Canadians older than or at least equal to 15 years old. The frame is a list of telephone numbers plus dwelling frame. The samples are units collceted in the survey. This survey applied a stratified sampling approach, the strata are the geographic areas of 10 provinces in Canada.
+
+There are non-reponse bias in the survey. First, there are population with no telephone numbers that could not be studied. Second, there are no answers for some questions but have answers for most of other questions. Because of the cost of the survey is huge due to it is a national wide one, so a trade-off is to keep the answered questions not changed but questions without answers imputed by estimations. 
+
+## Model
+
+The model used in this study is the linear regression model which has the following form:
+
+
+$$Y = \alpha_0 + \alpha_1 x_1 + ... + \alpha_k x_k + \epsilon$$
+where Y is the response variable feeling score of life in this study. $X_i$ is factor such as age, gender and etc. Note that for categorical factors with more than two levels, there are more than one dummy variables in the model. And $\epsilon$ is the error term which is assumed to be i.i.d. ~ N(0,$\sigma^2$). 
+
+The linear model is choosen because although the response feeling score of life is not continuous, it is ordinal response. Using linear regression, the results could be directly interpreted which matchs the goal of the study. Other models like bayes models could also be used, but as the data is large, estimations of these complicated models are big problems. This study uses R software to run the linear model and perform model diagnostics. The model diagnostics in this study mainly performed by using model diagnostic plots. The assumptions to be checked mainly including: independence, linearity, normality and constant variance assumptions. At last, for this study, there is no covengence problem.
+
+
+## Results
+
+The results section mainly include graphical summarises and model summarises. Figure 1 shows the distributions of feelings score of life grouped by gender, it seems no difference between female and male. Figure 2 shows the distributions of feelings score of life grouped by education level, it seems lower education level living happier. Figure 3 shows the distributions of feelings score of life grouped by whether living alone, it seems not alone living happier. Figure 4 shows the distributions of feelings score of life grouped by  citizenship status, it seems by birth living happier. Figure 5 shows the distributions of feelings score of life grouped by own or rent house, it seems owned house living happier.
+
+Figure 6 shows the distributions of feelings score of life grouped by  whether has grandchildren, it seems has grandchildren living happier. Figure 7 shows the distributions of feelings score of life grouped by  marital status, it seems married, living common living happier. Figure 8 shows the distributions of feelings score of life grouped by  body health, it seems Very good and Excellent living happier. Figure 9 shows the distributions of feelings score of life grouped by mental health, it seems Very good and Excellent living happier. Figure 10 shows the distributions of feelings score of life grouped by average hours worked per week, it seems 30 to 40 hours living happier. Figure 11 shows the distributions of feelings score of life grouped by  family income level, it seems 125,000 dollars and more living happier.
+
+```{r}
+library(ggplot2)
+library(cowplot)
+library(readr)
+library(dplyr)
+library(knitr)
+library(car)
+#source("gss_cleaning.r")
+#data prepare
+select <- dplyr::select
+data <- read_csv("gss.csv", na = c("","NA","Don't know")) %>% select(age, 
+          total_children, feelings_life, sex, education, self_rated_health,
+          citizenship_status, self_rated_mental_health, marital_status, own_rent,  
+          living_arrangement, hh_size,has_grandchildren,
+          average_hours_worked, income_family) %>% 
+     mutate(marital_status = ifelse(marital_status %in%
+                          c("Divorced","Separated","Widowed"),
+                                               "Single, married",
+                          ifelse(marital_status %in% c("Living common-law","Married"),
+                                 "Married, living common","Single, never married")),
+         own_rent=ifelse(own_rent=="Owned by you or a member of this household, even if it i...","owned","rented"),
+living_arrangement = ifelse(living_arrangement %in% c("Alone"),
+                                            "Alone",
+                                            "Not alone"),
+education = ifelse(education %in% c("University certificate, diploma or degree above the bach...","Bachelor's degree (e.g. B.A., B.Sc., LL.B.)"),"Not below Bachelor",
+                   "below Bachelor"))
+#data frame
+data <- data.frame(data)
+#remove missing values
+data <- na.omit(data)
+```
+
+```{r,fig.cap="Distributions of feelings score of life grouped by gender"}
+#graphs grouped by different factors
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = sex)) + 
+  geom_histogram(bins = 35) + facet_grid(~sex) + theme(legend.position = "none")  +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by education level"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill =education)) + 
+  geom_histogram(bins = 35) + facet_grid(~education) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+```{r,fig.cap="Distributions of feelings score of life grouped by whether living alone"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = living_arrangement)) + 
+  geom_histogram(bins = 35) + facet_grid(~living_arrangement) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by citizenship status"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = citizenship_status)) + 
+  geom_histogram(bins = 35) + facet_grid(~citizenship_status) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by own or rent house"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = own_rent)) + 
+  geom_histogram(bins = 35) + facet_grid(~own_rent) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by whether has grandchildren"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = has_grandchildren)) + 
+  geom_histogram(bins = 35) + facet_grid(~has_grandchildren) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+```{r,fig.cap="Distributions of feelings score of life grouped by marital status"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = marital_status)) + 
+  geom_histogram(bins = 35) + facet_grid(~marital_status) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by body health"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = self_rated_health)) + 
+  geom_histogram(bins = 35) + facet_grid(~self_rated_health) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by mental health"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = self_rated_mental_health)) + 
+  geom_histogram(bins = 35) + facet_grid(~self_rated_mental_health) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by average hours worked per week"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35)+ xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill = average_hours_worked)) + 
+  geom_histogram(bins = 35) + facet_grid(~ average_hours_worked) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+
+```{r,fig.cap="Distributions of feelings score of life grouped by family income level"}
+p1 <- ggplot(data, aes(x = feelings_life)) + geom_histogram(bins = 35) + xlab("")
+p2 <- ggplot(data, aes(x = feelings_life, fill =income_family)) + 
+  geom_histogram(bins = 35) + facet_grid(~income_family) + theme(legend.position = "none") +
+  xlab("feeling score of life")
+plot_grid(p1, p2, ncol = 1)
+```
+
+Table 1 shows the estimates of full model including all of the interested factors. However, due to the findings in graphical summarises, there are some factors might not be important in explanning feeling score of life. Thus, based on the model, the AIC backward model selection is performed and the results are shown in table 2. It can be found factors like age are dropped which is consistent with findings in the graphical summarises. 
+
+Table 3 shows the Variance Inflation Factors of the factors in the model, it can be found all of the factors left in the model show VIF values lower than 5 which means there is no mutli-collinearity issues in the model. However, figure 12 shows the model diagnostics plots. Clearly, it can be found from the normal QQ plot that there are lots of points far from the straight line at the head which means the normality assumption is not true. By dropping these outliers, the table 4 shows the estimates  and figure 13 shows the model diagnostics plots for the new model. It can be found from the model diagnostics plots that there are no serious problems for the model that linearity, independence, normality and constant variance assumptions are all satisfied, so the linear model obtained is valid.
+
+```{r}
+#full model
+model1 <- lm(feelings_life~.,data=data)
+kable(summary(model1)$coefficients,digit=2, caption="Estimates for full model")
+```
+
+```{r}
+#model selected by AIC
+model2 <- step(model1,direction = "backward",k=2,trace=0)
+kable(summary(model2)$coefficients,digit=2,caption="Estimates for model selected by AIC")
+```
+
+```{r}
+kable(vif(model2),digit=2,caption="Variance Inflation Factors")
+```
+
+
+```{r, fig.cap="Model diagnostics plots for the model selected by AIC",fig.height=5.8}
+par(mfrow = c(2,2))
+plot(model2,c(1,2,4,5), pch = 16, cex = 0.5)
+par(mfrow = c(1,1))
+```
+
+
+```{r}
+ids <- which(abs(rstandard(model2)) > 2.5)
+model3 <- lm(feelings_life ~ total_children + sex + education + 
+    self_rated_health + citizenship_status + self_rated_mental_health + 
+    marital_status + own_rent + living_arrangement + has_grandchildren + 
+    average_hours_worked + income_family, data = data[-ids,])
+```
+
+
+
+```{r, fig.cap="Model diagnostics plots for the model selected by AIC and outliers dropped",fig.height=5.8}
+par(mfrow = c(2,2))
+plot(model3,c(1,2,4,5), pch = 16, cex = 0.5)
+par(mfrow = c(1,1))
+```
+
+
+```{r}
+kable(summary(model3)$coefficients,digit=2,caption="Estimates for model selected by AIC with outliers dropped")
+```
+
+## Discussion
+
+From the estimates of the final model. Useful inferneces could be made. Table 4 shows that male, education level not below bachelor, poor body health, poor mental health, citizenship by naturalization not by birth, single martial status, rented house not owned all leading to show lower feeling score of life while not living alone, have more total children and has grandchildren make people living happier with higher feeling score of life. Also, average hours worked 50.1 hours and more as well as family income with 125,000 dollars and more make people living happier fixed other factors. 
+
+The findings are mainly for Canadians, however, the methods could be applied on any other similar data sets for other countries. People might draw different conclusions based on different data sets or even same data sets with different subsets. But, the findings should be consistent under similar situations for inviduals. The findings are important which could also be used for government which wants to improve the happiness of citizens. It would help the government understand the profiles of groups with high or low feeling score of life, for example, one of the most easiest way is to encourage single pearsons to get married or living common with their lovers. There are many different ways could be done for improving happiness.
+
+At last, besides the findings of the study. There are some weaknesses. First of all, the whole study is performed based on the subset of 2017 GSS data for Canadias, different subsets of the data could lead to different results. Also, there are non-response bias in the original survey data which could lead to bias problems for this study. Second, the response feeling score of life is scaled from 0 to 10 which is a small range for using a linear regression model under the context of the study. Finally, because the survey was performed for inviduals within households, couples might be correlated in responses which lead to the independence assumption of linear model to be questionable, this kind of work could be left in future work to improve the findings in this study.
+
+
+
+
+
+## References
+
+1. Hadley Wickham (2016). ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York.  
+  
+2. Hadley Wickham, Jim Hester and Romain Francois (2018). readr: Read Rectangular
+Text Data. R package version 1.3.1. https://CRAN.R-project.org/package=readr
+  
+3. Hadley Wickham, Romain Franois, Lionel Henry and Kirill Müller (2019). dplyr: A Grammar of Data Manipulation. R package version 0.8.3.  https://CRAN.R-project.org/package=dplyr
+  
+4. John Fox and Sanford Weisberg (2019). An {R} Companion to Applied Regression,Third Edition. Thousand Oaks CA: Sage. URL: https://socialsciences.mcmaster.ca/jfox/Books/Companion/
+  
+5. R Core Team (2019). R: A language and environment for statistical computing. R  Foundation for Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
+
+6. Rohan Alexander and Sam Caetano (2020). 2017 Canadian General Social Survey data cleaning source code.
+
+7. Yihui Xie (2020). knitr: A General-Purpose Package for Dynamic Report Generation in R. R package version 1.27.
+
+
+
